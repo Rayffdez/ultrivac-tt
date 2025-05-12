@@ -1,11 +1,10 @@
-
-# Ultrivac TT - With Tank Render
+# Ultrivac TT - Pseudo 3D Tank Render
 import streamlit as st
 import matplotlib.pyplot as plt
+import matplotlib.patches as patches
 import numpy as np
 
 st.set_page_config(page_title="Ultrivac TT", layout="wide")
-
 st.title("Ultrivac TT")
 st.subheader("Tank Testing Intelligence")
 
@@ -15,32 +14,41 @@ with st.expander("Tank Info"):
     fuel_volume = st.number_input("Fuel Volume (gal)", min_value=0.0, value=5000.0)
     mic_position = st.selectbox("Mic Position", ["End", "Center", "Top", "Bottom"])
 
-# Calculate tank volume in gallons (cylinder formula)
-tank_volume = np.pi * (diameter/2)**2 * length * 7.48  # 7.48 gal/ft³
+# Tank volume in gallons
+tank_volume = np.pi * (diameter / 2) ** 2 * length * 7.48
 fuel_percent = min(fuel_volume / tank_volume, 1.0)
 
-# Draw tank
-fig, ax = plt.subplots(figsize=(8, 2))
-ax.set_xlim(0, length)
-ax.set_ylim(0, diameter)
+# Pseudo 3D rendering
+fig, ax = plt.subplots(figsize=(10, 4))
+ax.set_xlim(-1, length + 1)
+ax.set_ylim(-diameter, diameter * 2.5)
 ax.set_aspect('equal')
-ax.set_facecolor('#0f1117')
 ax.axis('off')
 
-# Draw tank outline
-tank = plt.Rectangle((0, 0), length, diameter, linewidth=2, edgecolor='white', facecolor='none')
-ax.add_patch(tank)
+# Tank base shape (oval ends + rectangle body)
+tank_body = patches.FancyBboxPatch(
+    (0, 0), length, diameter,
+    boxstyle="round,pad=0.02",
+    linewidth=2, edgecolor="gray", facecolor="#eeeeee"
+)
+ax.add_patch(tank_body)
 
-# Draw fuel level
+# Fuel level
 fuel_height = diameter * fuel_percent
-fuel = plt.Rectangle((0, 0), length, fuel_height, color='deepskyblue', alpha=0.6)
-ax.add_patch(fuel)
+fuel_patch = patches.FancyBboxPatch(
+    (0, 0), length, fuel_height,
+    boxstyle="round,pad=0.02",
+    linewidth=0, facecolor="deepskyblue", alpha=0.6
+)
+ax.add_patch(fuel_patch)
 
-# Mic position marker
-mic_x = {"End": 0.5, "Center": length/2, "Top": length/2, "Bottom": length/2}.get(mic_position, length/2)
-mic_y = {"Top": diameter - 0.2, "Bottom": 0.2, "End": diameter/2, "Center": diameter/2}.get(mic_position, diameter/2)
-ax.plot(mic_x, mic_y, 'ro', markersize=10)
-ax.text(mic_x, mic_y + 0.3, 'Mic', color='red', ha='center')
+# Mic position logic
+mic_x = {"End": 0.5, "Center": length / 2, "Top": length / 2, "Bottom": length / 2}.get(mic_position, length / 2)
+mic_y = {"Top": diameter - 0.2, "Bottom": 0.2, "End": diameter / 2, "Center": diameter / 2}.get(mic_position, diameter / 2)
+
+# Mic point
+ax.plot(mic_x, mic_y, 'ro', markersize=12)
+ax.text(mic_x, mic_y + 0.4, 'Mic', color='red', ha='center', fontsize=10)
 
 st.pyplot(fig)
 
